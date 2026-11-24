@@ -20,6 +20,24 @@ STORY = (
 )
 
 
+def validate_story(text):
+    """Reject the story before writing if it contains carriage returns,
+    other control characters, consecutive double spaces, or leading /
+    trailing spaces. Raises ValueError with the reason on failure."""
+    if "\r" in text:
+        raise ValueError("story contains a carriage return (\\r)")
+    control = [c for c in text if ord(c) < 32 and c not in ("\n", "\t")]
+    if control:
+        raise ValueError(
+            f"story contains control character(s): {[hex(ord(c)) for c in control]}"
+        )
+    if "  " in text:
+        raise ValueError("story contains consecutive double spaces")
+    if text != text.strip():
+        raise ValueError("story has leading or trailing whitespace")
+    return True
+
+
 def count_sentences(text):
     """Count sentences by terminal punctuation (. ! ?)."""
     stripped = text.strip()
@@ -30,6 +48,12 @@ def count_sentences(text):
 
 
 def main():
+    try:
+        validate_story(STORY)
+    except ValueError as exc:
+        print(f"validation failed: {exc}", file=sys.stderr)
+        return 1
+
     out_dir = "/output"
     out_path = os.path.join(out_dir, "entry.txt")
 
